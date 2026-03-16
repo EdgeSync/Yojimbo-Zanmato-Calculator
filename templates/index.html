@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yojimbo Zanmato Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .main-container {
+            max-width: 100%;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: minmax(300px, 380px) 1fr minmax(280px, 360px);
+            gap: 15px;
+            align-items: start;
+            justify-items: stretch;
+            padding: 10px;
+            min-height: calc(100vh - 40px);
+        }
+
+        .container {
+            /* Updated for grid layout */
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            color: #333;
+        }
+
+        .enemy-panel {
+            width: 100%;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            display: none;
+        }
+
+        .enemy-panel.show {
+            display: block;
+            animation: slideInRight 0.3s ease;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr auto;
+            gap: 12px;
+            margin-bottom: 20px;
+            align-items: end;
+        }
+
+        .form-row .form-group {
+            margin-bottom: 0;
+        }
+
+        .form-row:has(.form-group:only-child),
+        .form-row.two-col {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .form-group-overdrive {
+            min-width: 120px;
+        }
+
+        .form-group-overdrive .checkbox-group {
+            padding-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items:center;
+            gap: 10px;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .suggestion-list {
+            position: absolute;
+            background: white;
+            border: 2px solid #667eea;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            width: calc(100% - 4px);
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .suggestion-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+
+        .suggestion-item:hover {
+            background: #f0f0f0;
+        }
+
+        .suggestion-item:hover {
+            background: #f0f0f0;
+        }
+
+        .suggestion-item.highlighted {
+            background: #667eea !important;
+            color: white !important;
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+        }
+
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-title {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .result-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+        }
+
+        .result-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .result-value {
+            color: #333;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .probability-display {
+            font-size: 2em;
+            color: #667eea;
+            font-weight: 700;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .guaranteed-badge {
+            display: inline-block;
+            background: #48bb78;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+
+        .best-effort-badge {
+            display: inline-block;
+            background: #ed8936;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+
+        .enemy-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: #edf2f7;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #c53030;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .info-text {
+            background: #bee3f8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3182ce;
+            font-size: 0.9em;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        /* Enemy Panel Styles */
+        .enemy-image-placeholder {
+            width: 100%;
+            height: 250px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            color: white;
+            font-size: 1.2em;
+            font-weight: 600;
+            text-align: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .enemy-image-placeholder img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+
+        .enemy-name-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 700;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .enemy-data-section {
+            margin-bottom: 25px;
+        }
+
+        .enemy-data-section h3 {
+            color: #667eea;
+            font-size: 1.1em;
+            margin-bottom: 12px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .enemy-stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .enemy-stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            color: #333;
+            font-weight: 700;
+        }
+
+        .zanmato-level-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .stat-box {
+            background: #f7fafc;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .stat-box-label {
+            font-size: 0.8em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-box-value {
+            font-size: 1.2em;
+            color: #333;
+            font-weight: 700;
+        }
+
+        .immunity-tag {
+            display: inline-block;
+            background: #fed7d7;
+            color: #c53030;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            margin: 3px;
+        }
+
+        .weakness-tag {
+            display: inline-block;
+            background: #feebc8;
+            color: #c05621;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            margin: 3px;
+        }
+
+        .elemental-tag {
+            display: inline-block;
+            background: #e6fffa;
+            color: #234e52;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            margin: 3px;
+        }
+
+        .compatibility-info {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            box-sizing: border-box;
+            max-width: none;
+        }
+
+        .compatibility-info h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+            flex-shrink: 0;
+        }
+
+        .compatibility-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 1.0em;
+            table-layout: fixed;
+            flex-grow: 1;
+            margin: 0;
+        }
+
+        .compatibility-table th {
+            background: #f7fafc;
+            color: #4a5568;
+            font-weight: 600;
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 2px solid #e2e8f0;
+            font-size: 1.0em;
+        }
+
+        .compatibility-table th:first-child {
+            width: 68%;
+            padding-left: 8px;
+        }
+
+        .compatibility-table th:last-child {
+            width: 32%;
+            text-align: center;
+            padding-right: 8px;
+        }
+
+        .compatibility-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: top;
+            font-size: 0.95em;
+            line-height: 1.4;
+        }
+
+        .compatibility-table td:first-child {
+            word-wrap: break-word;
+            hyphens: auto;
+            padding-left: 8px;
+        }
+
+        .compatibility-table td:last-child {
+            text-align: center;
+            white-space: nowrap;
+            padding-right: 8px;
+        }
+
+        .compatibility-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .compat-positive {
+            color: #38a169;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .compat-negative {
+            color: #e53e3e;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .compat-neutral {
+            color: #718096;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .compat-note {
+            font-size: 0.9em;
+            color: #666;
+            font-style: italic;
+            margin-top: 12px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            line-height: 1.5;
+            flex-shrink: 0;
+        }
+
+        .resources-section {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .resources-section h3 {
+            color: #667eea;
+            margin-bottom: 12px;
+            font-size: 1.1em;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 6px;
+        }
+
+        .resources-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .resources-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .resources-list li:last-child {
+            border-bottom: none;
+        }
+
+        .resource-type {
+            font-size: 0.75em;
+            font-weight: 600;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .resource-link {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9em;
+            word-break: break-all;
+        }
+
+        .resource-link:hover {
+            text-decoration: underline;
+        }
+
+        .resource-author {
+            font-size: 0.8em;
+            color: #888;
+        }
+
+        .resource-author-link {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .resource-author-link:hover {
+            text-decoration: underline;
+        }
+
+        .site-header {
+            text-align: center;
+            padding: 15px 10px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.85em;
+            margin-bottom: 20px;
+        }
+
+        .site-header a {
+            color: rgba(255, 255, 255, 0.95);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .site-header a:hover {
+            color: white;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                padding: 15px;
+            }
+            
+            .compatibility-info {
+                order: 3;
+                min-width: unset;
+            }
+            
+            .container {
+                order: 1;
+            }
+
+            .enemy-panel {
+                order: 2;
+                max-width: none;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 10px;
+            }
+            
+            .compatibility-table {
+                font-size: 0.9em;
+            }
+            
+            .compatibility-table th,
+            .compatibility-table td {
+                padding: 8px 6px;
+            }
+            
+            .compat-note {
+                font-size: 0.8em;
+            }
+            
+            .compatibility-info h3 {
+                font-size: 1.1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        &copy; 2026 EdgeSync &nbsp;&nbsp;|&nbsp;&nbsp;
+        Source code available on <a href="https://github.com/EdgeSync/Yojimbo-Zanmato-Calculator" target="_blank" rel="noopener noreferrer">GitHub</a> &nbsp;&nbsp;|&nbsp;&nbsp;
+        <a href="https://github.com/EdgeSync/Yojimbo-Zanmato-Calculator/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a> &nbsp;&nbsp;|&nbsp;&nbsp;
+        <a href="https://buymeacoffee.com/gcz8z52i6k" target="_blank" rel="noopener noreferrer">&#9749; Buy Me a Coffee</a>
+        <br><small style="opacity: 0.7; margin-top: 4px; display: block;">Final Fantasy X images &copy; Square Enix. Used under fair use for non-commercial fan purposes.</small>
+    </header>
+    <div class="main-container">
+        <!-- Compatibility Reference -->
+        <div class="compatibility-info">
+            <h3>🎭 Compatibility Changes</h3>
+            <table class="compatibility-table">
+                <thead>
+                    <tr>
+                        <th>Action</th>
+                        <th>Change</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Yojimbo uses "Zanmato" attack</td>
+                        <td style="text-align: center;"><span class="compat-positive">+4</span></td>
+                    </tr>
+                    <tr>
+                        <td>Yojimbo uses "Wakizashi" attack on all enemies</td>
+                        <td style="text-align: center;"><span class="compat-positive">+3</span></td>
+                    </tr>
+                    <tr>
+                        <td>Yojimbo uses "Wakizashi" attack on one enemy</td>
+                        <td style="text-align: center;"><span class="compat-positive">+1</span></td>
+                    </tr>
+                    <tr>
+                        <td>Yojimbo uses "Kozuka" attack</td>
+                        <td style="text-align: center;"><span class="compat-neutral">0</span></td>
+                    </tr>
+                    <tr>
+                        <td>Yojimbo uses "Daigoro" attack</td>
+                        <td style="text-align: center;"><span class="compat-negative">-1</span></td>
+                    </tr>
+                    <tr>
+                        <td>You dismiss Yojimbo immediately after summoning</td>
+                        <td style="text-align: center;"><span class="compat-negative">-3</span></td>
+                    </tr>
+                    <tr>
+                        <td>Yojimbo is KO'ed</td>
+                        <td style="text-align: center;"><span class="compat-negative">-10</span></td>
+                    </tr>
+                    <tr>
+                        <td>You pay Yojimbo 0 (zero) Gil</td>
+                        <td style="text-align: center;"><span class="compat-negative">-20*</span></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="compat-note">
+                *Paying 0 gil causes Yojimbo to dismiss immediately and heavily penalizes compatibility.
+            </div>
+
+            <div class="resources-section">
+                <h3>📚 Resources</h3>
+                <ul class="resources-list">
+                    <li>
+                        <span class="resource-type">GameFAQs Guide</span>
+                        <a href="https://gamefaqs.gamespot.com/ps2/197344-final-fantasy-x/faqs/24392" class="resource-link" target="_blank" rel="noopener noreferrer">Final Fantasy X – Yojimbo FAQ</a>
+                        <span class="resource-author">By: jobber2022497</span>
+                    </li>
+                    <li>
+                        <span class="resource-type">YouTube Video</span>
+                        <a href="https://www.youtube.com/watch?v=Gix4qXFzlxg" class="resource-link" target="_blank" rel="noopener noreferrer">Yojimbo Zanmato Deep Dive</a>
+                        <span class="resource-author">By: <a href="https://www.youtube.com/@Dansg08" class="resource-author-link" target="_blank" rel="noopener noreferrer">Dansg08</a></span>
+                    </li>
+                    <li>
+                        <span class="resource-type">Steam Guide</span>
+                        <a href="https://steamcommunity.com/sharedfiles/filedetails/?l=german&id=699497723" class="resource-link" target="_blank" rel="noopener noreferrer">Steam Guide - Yojimbo Calculator</a>
+                        <span class="resource-author">By: <a href="https://steamcommunity.com/id/rodrigo_vda" class="resource-author-link" target="_blank" rel="noopener noreferrer">rodrigo_vda</a></span>
+                    </li>
+                    <li>
+                        <span class="resource-type">Wiki</span>
+                        <a href="https://finalfantasy.fandom.com/wiki/Final_Fantasy_X_enemies" class="resource-link" target="_blank" rel="noopener noreferrer">FFX Wiki</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="container">
+            <h1>⚔️ Yojimbo Zanmato Calculator</h1>
+            <p class="subtitle">Calculate your chances of triggering Zanmato based on GameFAQs guide formulas</p>
+
+            <div class="info-text">
+                <strong>How it works:</strong> Zanmato probability depends on compatibility, gil payment, total gil owned, 
+                your hiring answer, overdrive status, and the enemy's Zanmato level. A value ≥80 guarantees Zanmato!<br>
+                <small><em>Formula varies by game version - select your version below.</em></small>
+            </div>
+
+        <form id="calculatorForm">
+            <div class="form-group">
+                <label for="gameVersion">Game Version:</label>
+                <select id="gameVersion" name="gameVersion" required>
+                    {% for key, settings in version_settings.items() %}
+                    <option value="{{ key }}" {% if key == default_version %}selected{% endif %}>{{ settings.name }}</option>
+                    {% endfor %}
+                </select>
+                <small style="color: #666; font-size: 0.85em; margin-top: 5px; display: block;">
+                    <span id="versionInfo">Select version to see details</span>
+                </small>
+            </div>
+            <div class="form-group">
+                <label for="enemy">Enemy Name:</label>
+                <div class="input-wrapper">
+                    <input type="text" id="enemy" name="enemy" placeholder="Start typing enemy name..." autocomplete="off" required>
+                    <div id="suggestions" class="suggestion-list" style="display: none;"></div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="compatibility">Compatibility (0-255):</label>
+                    <input type="number" id="compatibility" name="compatibility" value="128" min="0" max="255" required>
+                </div>
+                <div class="form-group">
+                    <label for="hiringGoal">Hired for:</label>
+                    <select id="hiringGoal" name="hiringGoal" required>
+                        {% for key, label in goal_labels.items() %}
+                        <option value="{{ key }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group form-group-overdrive">
+                    <label>&nbsp;</label>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="overdrive" name="overdrive">
+                        <label for="overdrive" style="margin: 0;">Has full Overdrive? <span id="overdriveBonus">(+20)</span></label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-row two-col">
+                <div class="form-group">
+                    <label for="totalGil">Total Gil Owned:</label>
+                    <input type="number" id="totalGil" name="totalGil" value="0" min="0" max="999999999" required>
+                </div>
+                <div class="form-group" id="paymentGroup">
+                    <label for="payment">Gil to Offer:</label>
+                    <input type="number" id="payment" name="payment" min="1" max="99999999" placeholder="(required for probability)">
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button type="button" id="calculateBtn" class="btn-primary">Calculate Probability</button>
+                <button type="button" id="findMinBtn" class="btn-secondary">Find Minimum Gil</button>
+            </div>
+        </form>
+
+            <div id="results" class="results"></div>
+            <div id="error" class="error"></div>
+        </div>
+
+        <!-- Enemy Information Panel -->
+        <div id="enemyPanel" class="enemy-panel">
+            <div class="enemy-image-placeholder" id="enemyImage">
+                Enemy Image
+            </div>
+            <div class="enemy-name-title" id="enemyNameDisplay"></div>
+            
+            <div class="enemy-data-section">
+                <h3>Basic Information</h3>
+                <div class="enemy-stat-row">
+                    <span class="stat-label">Location:</span>
+                    <span class="stat-value" id="enemyLocation">-</span>
+                </div>
+                <div class="enemy-stat-row">
+                    <span class="stat-label">Zanmato Level:</span>
+                    <span class="stat-value"><span class="zanmato-level-badge" id="enemyZanmato">-</span></span>
+                </div>
+                <div class="enemy-stat-row">
+                    <span class="stat-label">HP:</span>
+                    <span class="stat-value" id="enemyHP">-</span>
+                </div>
+                <div class="enemy-stat-row">
+                    <span class="stat-label">MP:</span>
+                    <span class="stat-value" id="enemyMP">-</span>
+                </div>
+                <div class="enemy-stat-row">
+                    <span class="stat-label">AP:</span>
+                    <span class="stat-value" id="enemyAP">-</span>
+                </div>
+                <div class="enemy-stat-row">
+                    <span class="stat-label">Gil:</span>
+                    <span class="stat-value" id="enemyGil">-</span>
+                </div>
+            </div>
+
+            <div class="enemy-data-section">
+                <h3>Combat Stats</h3>
+                <div class="stat-grid">
+                    <div class="stat-box">
+                        <div class="stat-box-label">STR</div>
+                        <div class="stat-box-value" id="statStr">-</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-box-label">MAG</div>
+                        <div class="stat-box-value" id="statMag">-</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-box-label">DEF</div>
+                        <div class="stat-box-value" id="statDef">-</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-box-label">MDEF</div>
+                        <div class="stat-box-value" id="statMdef">-</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-box-label">ACC</div>
+                        <div class="stat-box-value" id="statAcc">-</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-box-label">AGL</div>
+                        <div class="stat-box-value" id="statAgl">-</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-box-label">EVA</div>
+                        <div class="stat-box-value" id="statEva">-</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-box-label">LUCK</div>
+                        <div class="stat-box-value" id="statLuck">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="enemy-data-section" id="itemsSection">
+                <h3>Items</h3>
+                <div class="enemy-stat-row">
+                    <span class="stat-label">Steal:</span>
+                    <span class="stat-value" id="enemySteal">-</span>
+                </div>
+                <div class="enemy-stat-row">
+                    <span class="stat-label">Drop:</span>
+                    <span class="stat-value" id="enemyDrop">-</span>
+                </div>
+                <div class="enemy-stat-row">
+                    <span class="stat-label">Bribe:</span>
+                    <span class="stat-value" id="enemyBribe">-</span>
+                </div>
+            </div>
+
+            <div class="enemy-data-section" id="immunitiesSection">
+                <h3>Immunities</h3>
+                <div id="enemyImmunities">-</div>
+            </div>
+
+            <div class="enemy-data-section" id="weaknessesSection">
+                <h3>Weaknesses</h3>
+                <div id="enemyWeaknesses">-</div>
+            </div>
+
+            <div class="enemy-data-section" id="elementalSection">
+                <h3>Elemental Affinities</h3>
+                <div id="enemyElemental">-</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const enemies = {{ enemies | tojson }};
+        const versionSettings = {{ version_settings | tojson }};
+        
+        const enemyInput = document.getElementById('enemy');
+        const suggestionsDiv = document.getElementById('suggestions');
+        const form = document.getElementById('calculatorForm');
+        const resultsDiv = document.getElementById('results');
+        const errorDiv = document.getElementById('error');
+        const gameVersionSelect = document.getElementById('gameVersion');
+        const compatibilityInput = document.getElementById('compatibility');
+        const versionInfoSpan = document.getElementById('versionInfo');
+        const overdriveBonusSpan = document.getElementById('overdriveBonus');
+
+        // Handle version changes
+        function updateVersionInfo() {
+            const selectedVersion = gameVersionSelect.value;
+            const settings = versionSettings[selectedVersion];
+            
+            // Update compatibility default
+            compatibilityInput.value = settings.starting_compatibility;
+            
+            // Update overdrive bonus display
+            overdriveBonusSpan.textContent = `(+${settings.overdrive_bonus} bonus)`;
+            
+            // Update version info text
+            versionInfoSpan.innerHTML = `
+                Starting Compatibility: ${settings.starting_compatibility}, 
+                Compatibility Factor: ÷${settings.compatibility_divisor}, 
+                Overdrive: +${settings.overdrive_bonus}
+            `;
+        }
+
+        // Initialize version info and listen for changes
+        gameVersionSelect.addEventListener('change', updateVersionInfo);
+        updateVersionInfo(); // Set initial values
+
+        // Enemy autocomplete
+        let currentSuggestions = [];
+        let selectedIndex = -1;
+
+        function highlightSuggestion(index) {
+            const suggestionItems = suggestionsDiv.querySelectorAll('.suggestion-item');
+            suggestionItems.forEach((item, i) => {
+                if (i === index) {
+                    item.classList.add('highlighted');
+                } else {
+                    item.classList.remove('highlighted');
+                }
+            });
+        }
+
+        enemyInput.addEventListener('input', function() {
+            const value = this.value.toLowerCase();
+            
+            if (value.length < 2) {
+                suggestionsDiv.style.display = 'none';
+                currentSuggestions = [];
+                selectedIndex = -1;
+                return;
+            }
+
+            const matches = enemies.filter(enemy => 
+                enemy.toLowerCase().includes(value)
+            ).slice(0, 10);
+
+            currentSuggestions = matches;
+            selectedIndex = -1;
+
+            if (matches.length > 0) {
+                suggestionsDiv.innerHTML = matches.map(enemy => 
+                    `<div class="suggestion-item" data-enemy="${enemy}">${enemy}</div>`
+                ).join('');
+                suggestionsDiv.style.display = 'block';
+            } else {
+                suggestionsDiv.style.display = 'none';
+                currentSuggestions = [];
+            }
+        });
+
+        // Handle keyboard navigation
+        enemyInput.addEventListener('keydown', function(e) {
+            const isVisible = suggestionsDiv.style.display === 'block' && currentSuggestions.length > 0;
+            
+            if (isVisible) {
+                switch(e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        selectedIndex = selectedIndex < currentSuggestions.length - 1 ? selectedIndex + 1 : 0;
+                        highlightSuggestion(selectedIndex);
+                        break;
+                        
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        selectedIndex = selectedIndex > 0 ? selectedIndex - 1 : currentSuggestions.length - 1;
+                        highlightSuggestion(selectedIndex);
+                        break;
+                        
+                    case 'Enter':
+                        e.preventDefault();
+                        const targetSuggestion = selectedIndex >= 0 ? currentSuggestions[selectedIndex] : currentSuggestions[0];
+                        enemyInput.value = targetSuggestion;
+                        suggestionsDiv.style.display = 'none';
+                        currentSuggestions = [];
+                        selectedIndex = -1;
+                        resultsDiv.classList.remove('show');
+                        errorDiv.classList.remove('show');
+                        loadEnemyData(targetSuggestion);
+                        break;
+                        
+                    case 'Escape':
+                        e.preventDefault();
+                        suggestionsDiv.style.display = 'none';
+                        currentSuggestions = [];
+                        selectedIndex = -1;
+                        break;
+                }
+            }
+        });
+
+        suggestionsDiv.addEventListener('click', function(e) {
+            if (e.target.classList.contains('suggestion-item')) {
+                const selectedEnemy = e.target.dataset.enemy;
+                enemyInput.value = selectedEnemy;
+                suggestionsDiv.style.display = 'none';
+                currentSuggestions = [];
+                selectedIndex = -1;
+                resultsDiv.classList.remove('show');
+                errorDiv.classList.remove('show');
+                loadEnemyData(selectedEnemy);
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!enemyInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+                suggestionsDiv.style.display = 'none';
+                selectedIndex = -1;
+            }
+        });
+
+        // Load enemy data when manually entered
+        enemyInput.addEventListener('blur', function() {
+            const enemyName = this.value;
+            if (enemies.includes(enemyName)) {
+                resultsDiv.classList.remove('show');
+                errorDiv.classList.remove('show');
+                loadEnemyData(enemyName);
+            }
+            selectedIndex = -1;
+        });
+
+        // Load enemy data function
+        async function loadEnemyData(enemyName) {
+            try {
+                const response = await fetch(`/enemy/${encodeURIComponent(enemyName)}`);
+                if (!response.ok) {
+                    return;
+                }
+
+                const data = await response.json();
+                displayEnemyInfo(data);
+            } catch (error) {
+                console.error('Error loading enemy data:', error);
+            }
+        }
+
+        function displayEnemyInfo(data) {
+            const enemyPanel = document.getElementById('enemyPanel');
+            const info = data.info;
+
+            // Show panel
+            enemyPanel.classList.add('show');
+
+            // Update basic info
+            document.getElementById('enemyNameDisplay').textContent = data.name;
+            document.getElementById('enemyLocation').textContent = info.location || 'Unknown';
+            document.getElementById('enemyZanmato').textContent = info.zanmato_lv || 'N/A';
+            
+            // Update numeric stats
+            document.getElementById('enemyHP').textContent = info.hp ? info.hp.toLocaleString() : 'N/A';
+            document.getElementById('enemyMP').textContent = info.mp ? info.mp.toLocaleString() : 'N/A';
+            document.getElementById('enemyAP').textContent = info.ap ? info.ap.toLocaleString() : 'N/A';
+            document.getElementById('enemyGil').textContent = info.gil ? info.gil.toLocaleString() : 'None';
+
+            // Update combat stats
+            if (info.stats) {
+                document.getElementById('statStr').textContent = info.stats.str !== undefined && info.stats.str !== null ? info.stats.str : '-';
+                document.getElementById('statMag').textContent = info.stats.mag !== undefined && info.stats.mag !== null ? info.stats.mag : '-';
+                document.getElementById('statDef').textContent = info.stats.def !== undefined && info.stats.def !== null ? info.stats.def : '-';
+                document.getElementById('statMdef').textContent = info.stats.mdef !== undefined && info.stats.mdef !== null ? info.stats.mdef : '-';
+                document.getElementById('statAcc').textContent = info.stats.acc !== undefined && info.stats.acc !== null ? info.stats.acc : '-';
+                document.getElementById('statAgl').textContent = info.stats.agl !== undefined && info.stats.agl !== null ? info.stats.agl : '-';
+                document.getElementById('statEva').textContent = info.stats.eva !== undefined && info.stats.eva !== null ? info.stats.eva : '-';
+                document.getElementById('statLuck').textContent = info.stats.luck !== undefined && info.stats.luck !== null ? info.stats.luck : '-';
+            }
+
+            // Update items
+            if (info.steal) {
+                const stealText = [];
+                if (info.steal.common) stealText.push(`Common: ${info.steal.common}`);
+                if (info.steal.rare) stealText.push(`Rare: ${info.steal.rare}`);
+                document.getElementById('enemySteal').textContent = stealText.length > 0 ? stealText.join(', ') : 'None';
+            } else {
+                document.getElementById('enemySteal').textContent = 'None';
+            }
+
+            if (info.drop) {
+                const dropText = [];
+                if (info.drop.common) dropText.push(`Common: ${info.drop.common}`);
+                if (info.drop.rare) dropText.push(`Rare: ${info.drop.rare}`);
+                document.getElementById('enemyDrop').textContent = dropText.length > 0 ? dropText.join(', ') : 'None';
+            } else {
+                document.getElementById('enemyDrop').textContent = 'None';
+            }
+
+            if (info.bribe && info.bribe.gil && info.bribe.item) {
+                const bribeText = `${info.bribe.gil.toLocaleString()} Gil for ${info.bribe.item}`;
+                document.getElementById('enemyBribe').textContent = bribeText;
+            } else {
+                document.getElementById('enemyBribe').textContent = 'None';
+            }
+
+            // Update immunities
+            const immunitiesDiv = document.getElementById('enemyImmunities');
+            if (info.immunities && info.immunities.length > 0) {
+                immunitiesDiv.innerHTML = info.immunities.map(immunity => 
+                    `<span class="immunity-tag">${immunity}</span>`
+                ).join(' ');
+            } else {
+                immunitiesDiv.textContent = 'None';
+            }
+
+            // Update weaknesses
+            const weaknessesDiv = document.getElementById('enemyWeaknesses');
+            if (info.weaknesses && Object.keys(info.weaknesses).length > 0) {
+                weaknessesDiv.innerHTML = Object.entries(info.weaknesses).map(([effect, value]) => 
+                    `<span class="weakness-tag">${effect}: ${value}${typeof value === 'number' ? '%' : ''}</span>`
+                ).join(' ');
+            } else {
+                weaknessesDiv.textContent = 'None';
+            }
+
+            // Update elemental affinities
+            const elementalDiv = document.getElementById('enemyElemental');
+            if (info.elemental_affinities && Object.keys(info.elemental_affinities).length > 0) {
+                elementalDiv.innerHTML = Object.entries(info.elemental_affinities).map(([element, value]) => {
+                    let displayValue;
+                    if (value === 'absorb') displayValue = 'Absorbs';
+                    else if (typeof value === 'number') displayValue = `${value}x damage`;
+                    else displayValue = value;
+                    return `<span class="elemental-tag">${element.charAt(0).toUpperCase() + element.slice(1)}: ${displayValue}</span>`;
+                }).join(' ');
+            } else {
+                elementalDiv.textContent = 'None';
+            }
+
+            // Update image - check if enemy has an image, otherwise show placeholder
+            const enemyImageDiv = document.getElementById('enemyImage');
+            
+            if (info.image) {
+                const img = document.createElement('img');
+                img.src = info.image;
+                img.alt = data.name;
+                img.style.cssText = 'width: 100%; height: 100%; object-fit: contain; border-radius: 10px;';
+                
+                // Handle image load error
+                img.onerror = function() {
+                    enemyImageDiv.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; text-align: center;">
+                        <div>
+                            <div style="font-size: 2em; margin-bottom: 10px;">🚫</div>
+                            <div>Image Not Found</div>
+                            <div style="font-size: 0.9em; opacity: 0.8;">${data.name}</div>
+                        </div>
+                    </div>`;
+                };
+                
+                enemyImageDiv.innerHTML = '';
+                enemyImageDiv.appendChild(img);
+            } else {
+                enemyImageDiv.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; text-align: center;">
+                    <div>
+                        <div style="font-size: 2em; margin-bottom: 10px;">🎭</div>
+                        <div>No Image Available</div>
+                        <div style="font-size: 0.9em; opacity: 0.8;">${data.name}</div>
+                    </div>
+                </div>`;
+            }
+        }
+
+        // Button event handlers
+        const calculateBtn = document.getElementById('calculateBtn');
+        const findMinBtn = document.getElementById('findMinBtn');
+        const paymentGroup = document.getElementById('paymentGroup');
+        let lastCalcType = null;  // Track what was last calculated
+
+        function buildFormData(calcType) {
+            const paymentValue = parseInt(document.getElementById('payment').value) || 0;
+            return {
+                enemy: enemyInput.value,
+                compatibility: parseInt(document.getElementById('compatibility').value),
+                total_gil: parseInt(document.getElementById('totalGil').value),
+                payment: paymentValue,
+                hiring_goal: document.getElementById('hiringGoal').value,
+                overdrive: document.getElementById('overdrive').checked,
+                calc_type: calcType,
+                version: gameVersionSelect.value
+            };
+        }
+        
+        calculateBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            if (!enemyInput.value.trim() || !enemies.includes(enemyInput.value.trim())) {
+                errorDiv.textContent = 'Please select a valid enemy from the list before calculating.';
+                errorDiv.classList.add('show');
+                resultsDiv.classList.remove('show');
+                enemyInput.focus();
+                return;
+            }
+            
+            const paymentValue = parseInt(document.getElementById('payment').value) || 0;
+            
+            // Validate payment amount for probability calculation
+            if (paymentValue <= 0) {
+                errorDiv.textContent = 'Gil amount must be greater than 0. Yojimbo dismisses if offered 0 gil.';
+                errorDiv.classList.add('show');
+                resultsDiv.classList.remove('show');
+                return;
+            }
+            
+            lastCalcType = 'probability';
+            await calculate(buildFormData('probability'));
+        });
+        
+        findMinBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            if (!enemyInput.value.trim() || !enemies.includes(enemyInput.value.trim())) {
+                errorDiv.textContent = 'Please select a valid enemy from the list before calculating.';
+                errorDiv.classList.add('show');
+                resultsDiv.classList.remove('show');
+                enemyInput.focus();
+                return;
+            }
+            
+            const compatValue = parseInt(document.getElementById('compatibility').value);
+            if (isNaN(compatValue) || compatValue < 0 || compatValue > 255) {
+                errorDiv.textContent = 'Compatibility must be between 0 and 255.';
+                errorDiv.classList.add('show');
+                resultsDiv.classList.remove('show');
+                return;
+            }
+
+            const totalGilValue = parseInt(document.getElementById('totalGil').value);
+            if (isNaN(totalGilValue) || totalGilValue < 0) {
+                errorDiv.textContent = 'Total gil owned must be 0 or greater.';
+                errorDiv.classList.add('show');
+                resultsDiv.classList.remove('show');
+                return;
+            }
+
+            lastCalcType = 'minimum';
+            await calculate(buildFormData('minimum'));
+        });
+
+        async function calculate(data) {
+            errorDiv.classList.remove('show');
+            resultsDiv.classList.remove('show');
+
+            try {
+                const response = await fetch('/calculate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Calculation failed');
+                }
+
+                displayResults(result);
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.classList.add('show');
+            }
+        }
+
+        function displayResults(result) {
+            let html = '';
+
+            if (result.type === 'minimum_gil') {
+                const isGuaranteed = result.guaranteed || result.result_type === 'guaranteed';
+                const titleText = isGuaranteed ? "Minimum Gil for Guaranteed Zanmato" : "Best Achievable Zanmato Chance";
+                const badgeText = isGuaranteed ? "Guaranteed!" : `Best: ${result.probability}%`;
+                
+                html = `
+                    <div class="result-title">${titleText}</div>
+                    <div class="probability-display">
+                        ${result.minimum_gil.toLocaleString()} Gil
+                        <span class="${isGuaranteed ? 'guaranteed-badge' : 'best-effort-badge'}">${badgeText}</span>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">At this payment amount:</div>
+                        <div class="result-value">
+                            Probability: ${result.probability}%${isGuaranteed ? '' : ' (Maximum Achievable)'}
+                        </div>
+                    </div>
+                `;
+            } else {
+                const isGuaranteed = result.guaranteed;
+                html = `
+                    <div class="result-title">Zanmato Probability</div>
+                    <div class="probability-display">
+                        ${result.probability}%
+                        ${isGuaranteed ? '<span class="guaranteed-badge">Guaranteed!</span>' : ''}
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">Payment Amount:</div>
+                        <div class="result-value">${result.payment.toLocaleString()} Gil</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">Zanmato Value Range:</div>
+                        <div class="result-value">${result.min_value} - ${result.max_value} (need ≥80)</div>
+                    </div>
+                `;
+            }
+
+            // Add breakdown
+            html += `
+                <div class="result-item">
+                    <div class="result-label">Game Version:</div>
+                    <div class="result-value">${result.version_name || 'Unknown'}</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-label">Calculation Breakdown:</div>
+                    <div class="result-value">
+                        Gil Motivation: +${result.breakdown.gil_motivation}<br>
+                        Compatibility Contribution: +${result.breakdown.compatibility_contribution}<br>
+                        Overdrive Bonus: +${result.breakdown.overdrive_bonus}<br>
+                        Random Range: 0 to 63<br>
+                        <small><em>Formula varies by game version - see steps in breakdown</em></small>
+                    </div>
+                </div>
+            `;
+
+            // Add enemy info if available
+            if (result.enemy_info) {
+                const info = result.enemy_info;
+                html += `
+                    <div class="enemy-info">
+                        <strong>${result.enemy}</strong><br>
+                        Zanmato Level: ${result.zanmato_level}<br>
+                        HP: ${info.hp ? info.hp.toLocaleString() : 'N/A'}<br>
+                        Location: ${info.location || 'Unknown'}
+                    </div>
+                `;
+            }
+
+            resultsDiv.innerHTML = html;
+            resultsDiv.classList.add('show');
+        }
+    </script>
+</body>
+</html>
