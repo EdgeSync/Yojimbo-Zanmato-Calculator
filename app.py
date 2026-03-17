@@ -39,7 +39,7 @@ VERSION_SETTINGS = {
     VERSION_INTERNATIONAL: {
         "name": "PAL/International/HD Remaster", 
         "starting_compatibility": 128,
-        "compatibility_divisor": 4,
+        "compatibility_divisor": 10,
         "overdrive_bonus": 20,
         "gil_multiplier": 4
     }
