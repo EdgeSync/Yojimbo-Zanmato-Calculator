@@ -17,9 +17,8 @@ GOAL_TRAINING = "training"
 GOAL_DESTROY_FIENDS = "destroy_fiends"
 GOAL_STRONG = "strong_enemies"
 
-# Game version constants
-VERSION_ORIGINAL = "original"  # North American & Original Japanese
-VERSION_INTERNATIONAL = "international"  # International/PAL/HD Remaster
+# Game version for PAL/International/HD Remaster only
+VERSION_INTERNATIONAL = "international"
 
 GOAL_LABELS = {
     GOAL_TRAINING: "To train as a summoner",
@@ -89,32 +88,22 @@ SPENDING_CHARTS = {
     }
 }
 
-# Version-specific settings
+# International version settings only
 VERSION_SETTINGS = {
-    VERSION_ORIGINAL: {
-        "name": "NTSC/Original Japanese",
-        "starting_compatibility": 50,
-        "compatibility_divisor": 30,
-        "overdrive_bonus": 2,
-        "gil_multiplier": 2
-    },
-    VERSION_INTERNATIONAL: {
-        "name": "PAL/International/HD Remaster", 
-        "starting_compatibility": 128,
-        "compatibility_divisor": 10,
-        "overdrive_bonus": 20,
-        "gil_multiplier": 4
-    }
+    "name": "PAL/International/HD Remaster", 
+    "starting_compatibility": 128,
+    "compatibility_divisor": 10,
+    "overdrive_bonus": 20,
+    "gil_multiplier": 4
 }
 
-def get_gil_motivation(gil_offered, version):
+def get_gil_motivation(gil_offered):
     """Get motivation value using correct GameFAQs logarithmic formula."""
     if gil_offered <= 1:
         return 0
     
-    # GameFAQs formula: ([ln(P)/ln(2)] - 1) * multiplier
-    settings = VERSION_SETTINGS[version]
-    motivation = (math.log(gil_offered) / math.log(2) - 1) * settings["gil_multiplier"]
+    # GameFAQs formula: ([ln(P)/ln(2)] - 1) * multiplier (International version)
+    motivation = (math.log(gil_offered) / math.log(2) - 1) * VERSION_SETTINGS["gil_multiplier"]
     return math.floor(motivation)
 
 
@@ -132,25 +121,24 @@ def get_level_multiplier(zanmato_level, hiring_goal):
             return 0.4
 
 
-def calculate_paid_zanmato_value(compatibility, total_gil, payment, zanmato_level, hiring_goal, overdrive, version):
+def calculate_paid_zanmato_value(compatibility, payment, zanmato_level, hiring_goal, overdrive):
     """
     Calculate the Zanmato value for a paid Zanmato attempt.
     Uses correct formulas based on game code analysis.
     """
-    settings = VERSION_SETTINGS[version]
     
     # Step 1: Gil motivation from logarithmic formula
-    gil_motivation = get_gil_motivation(payment, version)
+    gil_motivation = get_gil_motivation(payment)
     
     # Step 2: Compatibility motivation = Gil motivation + (compatibility/10)
-    compatibility_motivation = gil_motivation + math.floor(compatibility / settings["compatibility_divisor"])
+    compatibility_motivation = gil_motivation + math.floor(compatibility / VERSION_SETTINGS["compatibility_divisor"])
     
     # Step 3: Zanmato level motivation = Compatibility motivation × choice multiplier
     level_mult = get_level_multiplier(zanmato_level, hiring_goal)
     zanmato_level_motivation = math.floor(compatibility_motivation * level_mult)
     
     # Step 4: Overdrive motivation = Zanmato level motivation + overdrive bonus
-    overdrive_bonus = settings["overdrive_bonus"] if overdrive else 0
+    overdrive_bonus = VERSION_SETTINGS["overdrive_bonus"] if overdrive else 0
     overdrive_motivation = zanmato_level_motivation + overdrive_bonus
     
     
@@ -161,7 +149,7 @@ def calculate_paid_zanmato_value(compatibility, total_gil, payment, zanmato_leve
         "min_value": overdrive_motivation,  # random = 0
         "max_value": overdrive_motivation + 63,  # random = 63
         "gil_motivation": gil_motivation,
-        "compatibility_contribution": math.floor(compatibility / settings["compatibility_divisor"]),
+        "compatibility_contribution": math.floor(compatibility / VERSION_SETTINGS["compatibility_divisor"]),
         "ratio_applied": False,  # No longer used
         "level_multiplier": level_mult,
         "overdrive_bonus": overdrive_bonus,
@@ -174,12 +162,12 @@ def calculate_paid_zanmato_value(compatibility, total_gil, payment, zanmato_leve
     }
 
 
-def calculate_zanmato_probability(compatibility, total_gil, payment, zanmato_level, hiring_goal, overdrive, version):
+def calculate_zanmato_probability(compatibility, payment, zanmato_level, hiring_goal, overdrive):
     """
     Calculate probability of Zanmato.
     Zanmato occurs when final value >= 80
     """
-    result = calculate_paid_zanmato_value(compatibility, total_gil, payment, zanmato_level, hiring_goal, overdrive, version)
+    result = calculate_paid_zanmato_value(compatibility, payment, zanmato_level, hiring_goal, overdrive)
     
     min_val = result["min_value"]
     max_val = result["max_value"]
@@ -207,7 +195,7 @@ def calculate_zanmato_probability(compatibility, total_gil, payment, zanmato_lev
     }
 
 
-def find_minimum_gil(compatibility, total_gil, zanmato_level, hiring_goal, overdrive, version):
+def find_minimum_gil(compatibility, zanmato_level, hiring_goal, overdrive):
     """Find the most efficient gil bracket for the highest achievable percentage."""
     
     # Define gil brackets based on the reference tables (powers of 2 pattern)
@@ -223,7 +211,7 @@ def find_minimum_gil(compatibility, total_gil, zanmato_level, hiring_goal, overd
         if gil_amount > MAX_GIL:
             break
             
-        calc = calculate_zanmato_probability(compatibility, total_gil, gil_amount, zanmato_level, hiring_goal, overdrive, version)
+        calc = calculate_zanmato_probability(compatibility, gil_amount, zanmato_level, hiring_goal, overdrive)
         
         # Check for guaranteed first
         if calc["guaranteed"]:
@@ -257,9 +245,7 @@ def index():
     enemy_list = get_enemy_names()
     return render_template('index.html', 
                           enemies=enemy_list,
-                          goal_labels=GOAL_LABELS,
-                          version_settings=VERSION_SETTINGS,
-                          default_version=VERSION_INTERNATIONAL)
+                          goal_labels=GOAL_LABELS)
 
 
 @app.route('/calculate', methods=['POST'])
@@ -268,18 +254,10 @@ def calculate():
     try:
         data = request.json
         
-        # Get version (default to International for HD Remaster)
-        version = data.get('version', VERSION_INTERNATIONAL)
-        if version not in VERSION_SETTINGS:
-            version = VERSION_INTERNATIONAL
-        
         enemy_name = data.get('enemy')
-        compatibility = int(data.get('compatibility', VERSION_SETTINGS[version]["starting_compatibility"]))
+        compatibility = int(data.get('compatibility', VERSION_SETTINGS["starting_compatibility"]))
         if compatibility < 0 or compatibility > 255:
             return jsonify({"error": "Compatibility must be between 0 and 255."}), 400
-        total_gil = int(data.get('total_gil', 0))
-        if total_gil < 0:
-            return jsonify({"error": "Total gil owned cannot be negative."}), 400
         hiring_goal = data.get('hiring_goal', GOAL_TRAINING)
         if hiring_goal not in GOAL_LABELS:
             hiring_goal = GOAL_TRAINING
@@ -295,7 +273,7 @@ def calculate():
         
         if calc_type == 'minimum':
             # Find minimum gil for best Zanmato chance
-            result_data = find_minimum_gil(compatibility, total_gil, zanmato_level, hiring_goal, overdrive, version)
+            result_data = find_minimum_gil(compatibility, zanmato_level, hiring_goal, overdrive)
             
             if result_data is None:
                 return jsonify({"error": "Cannot calculate Zanmato probabilities with these parameters"}), 400
@@ -303,7 +281,7 @@ def calculate():
             min_gil = result_data["minimum_gil"]
             
             # Calculate detailed breakdown at that payment
-            detailed_result = calculate_zanmato_probability(compatibility, total_gil, min_gil, zanmato_level, hiring_goal, overdrive, version)
+            detailed_result = calculate_zanmato_probability(compatibility, min_gil, zanmato_level, hiring_goal, overdrive)
             
             return jsonify({
                 "type": "minimum_gil",
@@ -315,9 +293,7 @@ def calculate():
                 "enemy": enemy_name,
                 "enemy_info": enemy_info,
                 "zanmato_level": zanmato_level,
-                "compatibility": compatibility,
-                "version": version,
-                "version_name": VERSION_SETTINGS[version]["name"]
+                "compatibility": compatibility
             })
         else:  # probability calculation
             payment = int(data.get('payment', 0))
@@ -326,7 +302,7 @@ def calculate():
             if payment <= 0:
                 return jsonify({"error": "Gil payment must be greater than 0. Yojimbo dismisses if offered 0 gil."}), 400
             
-            result = calculate_zanmato_probability(compatibility, total_gil, payment, zanmato_level, hiring_goal, overdrive, version)
+            result = calculate_zanmato_probability(compatibility, payment, zanmato_level, hiring_goal, overdrive)
             
             return jsonify({
                 "type": "probability",
@@ -339,9 +315,7 @@ def calculate():
                 "enemy": enemy_name,
                 "enemy_info": enemy_info,
                 "zanmato_level": zanmato_level,
-                "compatibility": compatibility,
-                "version": version,
-                "version_name": VERSION_SETTINGS[version]["name"]
+                "compatibility": compatibility
             })
             
     except ValueError as e:

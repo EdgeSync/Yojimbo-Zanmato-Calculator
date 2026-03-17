@@ -918,23 +918,13 @@
             <p class="subtitle">Calculate your chances of triggering Zanmato based on GameFAQs guide formulas</p>
 
             <div class="info-text">
-                <strong>How it works:</strong> Zanmato probability depends on compatibility, gil payment, total gil owned, 
-                your hiring answer, overdrive status, and the enemy's Zanmato level. A value ≥80 guarantees Zanmato!<br>
-                <small><em>Formula varies by game version - select your version below.</em></small>
+                <strong>How it works:</strong> Zanmato probability depends on compatibility, gil payment, 
+                your hiring answer, overdrive status, and the enemy's Zanmato level. A value ≥80 guarantees Zanmato!
+                <br><em>Note: This calculator uses the mechanics from PAL/International/HD Remaster editions, 
+                as the formulas differ from the original Japanese/NTSC release.</em>
             </div>
 
         <form id="calculatorForm">
-            <div class="form-group">
-                <label for="gameVersion">Game Version:</label>
-                <select id="gameVersion" name="gameVersion" required>
-                    {% for key, settings in version_settings.items() %}
-                    <option value="{{ key }}" {% if key == default_version %}selected{% endif %}>{{ settings.name }}</option>
-                    {% endfor %}
-                </select>
-                <small style="color: #666; font-size: 0.85em; margin-top: 5px; display: block;">
-                    <span id="versionInfo">Select version to see details</span>
-                </small>
-            </div>
             <div class="form-group">
                 <label for="enemy">Enemy Name:</label>
                 <div class="input-wrapper">
@@ -965,11 +955,7 @@
                 </div>
             </div>
 
-            <div class="form-row two-col">
-                <div class="form-group">
-                    <label for="totalGil">Total Gil Owned:</label>
-                    <input type="number" id="totalGil" name="totalGil" value="0" min="0" max="999999999" required>
-                </div>
+            <div class="form-row">
                 <div class="form-group" id="paymentGroup">
                     <label for="payment">Gil to Offer:</label>
                     <input type="number" id="payment" name="payment" min="1" max="99999999" placeholder="(required for probability)">
@@ -1094,40 +1080,16 @@
 
     <script>
         const enemies = {{ enemies | tojson }};
-        const versionSettings = {{ version_settings | tojson }};
         
         const enemyInput = document.getElementById('enemy');
         const suggestionsDiv = document.getElementById('suggestions');
         const form = document.getElementById('calculatorForm');
         const resultsDiv = document.getElementById('results');
         const errorDiv = document.getElementById('error');
-        const gameVersionSelect = document.getElementById('gameVersion');
         const compatibilityInput = document.getElementById('compatibility');
-        const versionInfoSpan = document.getElementById('versionInfo');
-        const overdriveBonusSpan = document.getElementById('overdriveBonus');
 
-        // Handle version changes
-        function updateVersionInfo() {
-            const selectedVersion = gameVersionSelect.value;
-            const settings = versionSettings[selectedVersion];
-            
-            // Update compatibility default
-            compatibilityInput.value = settings.starting_compatibility;
-            
-            // Update overdrive bonus display
-            overdriveBonusSpan.textContent = `(+${settings.overdrive_bonus} bonus)`;
-            
-            // Update version info text
-            versionInfoSpan.innerHTML = `
-                Starting Compatibility: ${settings.starting_compatibility}, 
-                Compatibility Factor: ÷${settings.compatibility_divisor}, 
-                Overdrive: +${settings.overdrive_bonus}
-            `;
-        }
-
-        // Initialize version info and listen for changes
-        gameVersionSelect.addEventListener('change', updateVersionInfo);
-        updateVersionInfo(); // Set initial values
+        // Set default compatibility for International/PAL/HD version
+        compatibilityInput.value = 128;
 
         // Enemy autocomplete
         let currentSuggestions = [];
@@ -1392,12 +1354,10 @@
             return {
                 enemy: enemyInput.value,
                 compatibility: parseInt(document.getElementById('compatibility').value),
-                total_gil: parseInt(document.getElementById('totalGil').value),
                 payment: paymentValue,
                 hiring_goal: document.getElementById('hiringGoal').value,
                 overdrive: document.getElementById('overdrive').checked,
-                calc_type: calcType,
-                version: gameVersionSelect.value
+                calc_type: calcType
             };
         }
         
@@ -1440,14 +1400,6 @@
             const compatValue = parseInt(document.getElementById('compatibility').value);
             if (isNaN(compatValue) || compatValue < 0 || compatValue > 255) {
                 errorDiv.textContent = 'Compatibility must be between 0 and 255.';
-                errorDiv.classList.add('show');
-                resultsDiv.classList.remove('show');
-                return;
-            }
-
-            const totalGilValue = parseInt(document.getElementById('totalGil').value);
-            if (isNaN(totalGilValue) || totalGilValue < 0) {
-                errorDiv.textContent = 'Total gil owned must be 0 or greater.';
                 errorDiv.classList.add('show');
                 resultsDiv.classList.remove('show');
                 return;
@@ -1532,17 +1484,13 @@
             // Add breakdown
             html += `
                 <div class="result-item">
-                    <div class="result-label">Game Version:</div>
-                    <div class="result-value">${result.version_name || 'Unknown'}</div>
-                </div>
-                <div class="result-item">
                     <div class="result-label">Calculation Breakdown:</div>
                     <div class="result-value">
                         Gil Motivation: +${result.breakdown.gil_motivation}<br>
                         Compatibility Contribution: +${result.breakdown.compatibility_contribution}<br>
                         Overdrive Bonus: +${result.breakdown.overdrive_bonus}<br>
                         Random Range: 0 to 63<br>
-                        <small><em>Formula varies by game version - see steps in breakdown</em></small>
+                        <small><em>Calculations for PAL/International/HD Remaster version</em></small>
                     </div>
                 </div>
             `;
