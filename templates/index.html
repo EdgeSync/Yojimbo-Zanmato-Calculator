@@ -219,6 +219,132 @@
             box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
         }
 
+        .btn-chart {
+            background: #48bb78;
+            color: white;
+            font-size: 14px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 15px;
+        }
+
+        .btn-chart:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+        }
+
+        .chart-button-container {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .spending-chart {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .spending-chart.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .spending-chart-inline {
+            background: #f8f9fa;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .spending-chart-inline.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .chart-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .chart-subtitle {
+            font-size: 0.95rem;
+            color: #666;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .chart-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            overflow-x: auto;
+            display: block;
+            white-space: nowrap;
+        }
+
+        .chart-table thead {
+            background: #f7fafc;
+        }
+
+        .chart-table th,
+        .chart-table td {
+            border: 1px solid #e2e8f0;
+            padding: 8px 10px;
+            text-align: center;
+        }
+
+        .chart-table th {
+            font-weight: 600;
+            color: #2d3748;
+            background: #edf2f7;
+        }
+
+        .chart-table tbody tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .chart-table tbody tr:hover {
+            background: #e6f3ff;
+        }
+
+        .chart-table .guaranteed {
+            background: #48bb78 !important;
+            color: white;
+            font-weight: bold;
+        }
+
+        .chart-table .high {
+            background: #ed8936 !important;
+            color: white;
+            font-weight: bold;
+        }
+
+        .chart-table .medium {
+            background: #ecc94b !important;
+            color: #2d3748;
+            font-weight: bold;
+        }
+
+        .chart-table .low {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
         .results {
             margin-top: 30px;
             padding: 20px;
@@ -1377,6 +1503,12 @@
                             Probability: ${result.probability}%${isGuaranteed ? '' : ' (Maximum Achievable)'}
                         </div>
                     </div>
+                    <div class="chart-button-container">
+                        <button type="button" id="chartToggleBtn" class="btn-chart" onclick="toggleSpendingChart(${result.zanmato_level})">
+                            📊 See Spending Chart
+                        </button>
+                        <div id="spendingChartInline" class="spending-chart-inline"></div>
+                    </div>
                 `;
             } else {
                 const isGuaranteed = result.guaranteed;
@@ -1430,6 +1562,83 @@
 
             resultsDiv.innerHTML = html;
             resultsDiv.classList.add('show');
+        }
+
+        async function toggleSpendingChart(zanmatoLevel) {
+            const chartDiv = document.getElementById('spendingChartInline');
+            const toggleBtn = document.getElementById('chartToggleBtn');
+            
+            // If chart is currently visible, hide it
+            if (chartDiv.classList.contains('show')) {
+                chartDiv.classList.remove('show');
+                toggleBtn.textContent = '📊 See Spending Chart';
+                return;
+            }
+            
+            // Show the chart
+            try {
+                // Change button text immediately
+                toggleBtn.textContent = '📊 Hide Spending Chart';
+                
+                const response = await fetch(`/spending-chart/${zanmatoLevel}`);
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to load chart');
+                }
+                
+                const chart = data.chart;
+                
+                let chartHtml = `
+                    <div class="chart-title">${chart.title}</div>
+                    <div class="chart-subtitle">${chart.subtitle}</div>
+                    <div style="overflow-x: auto;">
+                        <table class="chart-table">
+                            <thead>
+                                <tr>
+                                    <th>Minimum Payment</th>
+                `;
+                
+                // Add compatibility headers
+                chart.compatibility_values.forEach(comp => {
+                    chartHtml += `<th>${comp}</th>`;
+                });
+                
+                chartHtml += `
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                // Add data rows
+                chart.payment_ranges.forEach((range, index) => {
+                    const formattedPayment = parseInt(range).toLocaleString();
+                    chartHtml += `<tr><td><strong>${formattedPayment} Gil</strong></td>`;
+                    chart.data[index].forEach(percentage => {
+                        const cellClass = percentage >= 100 ? 'guaranteed' : percentage >= 80 ? 'high' : percentage >= 50 ? 'medium' : 'low';
+                        chartHtml += `<td class="${cellClass}">${percentage}%</td>`;
+                    });
+                    chartHtml += `</tr>`;
+                });
+                
+                chartHtml += `
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="margin-top: 15px; font-size: 12px; color: #666; text-align: center;">
+                        <strong>Note:</strong> Percentages are for Option 3 (Defeat strongest enemies) with Full Overdrive. 
+                        Values show minimum payment needed for each percentage bracket.
+                    </div>
+                `;
+                
+                chartDiv.innerHTML = chartHtml;
+                chartDiv.classList.add('show');
+                
+            } catch (error) {
+                chartDiv.innerHTML = `<div class="error">Error loading chart: ${error.message}</div>`;
+                chartDiv.classList.add('show');
+                toggleBtn.textContent = '📊 See Spending Chart'; // Reset button on error
+            }
         }
     </script>
 </body>

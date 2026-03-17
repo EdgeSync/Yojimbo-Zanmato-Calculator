@@ -27,6 +27,68 @@ GOAL_LABELS = {
     GOAL_STRONG: "To defeat the most powerful of enemies"
 }
 
+# Spending charts based on game analysis
+SPENDING_CHARTS = {
+    "levels_1_3": {
+        "title": "Spending Chart - Zanmato Levels 1-3",
+        "subtitle": "Percentages for Option 3 (Defeat strongest enemies) with Full Overdrive",
+        "payment_ranges": ["1", "4", "8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", 
+                          "8192", "16384", "32768", "65536", "131072", "262144", "524288", "1048576"],
+        "compatibility_values": [0, 32, 64, 96, 128, 160, 192, 224, 255],
+        "data": [
+            [6, 9, 12, 17, 20, 25, 29, 32, 37],
+            [10, 14, 18, 21, 25, 31, 34, 37, 42],
+            [15, 18, 23, 26, 31, 35, 39, 43, 46],
+            [20, 25, 28, 31, 35, 40, 43, 48, 51],
+            [25, 29, 32, 37, 40, 45, 50, 53, 56],
+            [31, 34, 37, 42, 45, 50, 54, 57, 62],
+            [35, 39, 43, 46, 50, 56, 59, 62, 67],
+            [40, 43, 48, 51, 56, 60, 64, 68, 71],
+            [45, 50, 53, 56, 60, 65, 68, 73, 76],
+            [50, 54, 57, 62, 65, 70, 75, 78, 81],
+            [56, 59, 62, 67, 70, 75, 79, 82, 87],
+            [60, 64, 68, 71, 75, 81, 84, 87, 92],
+            [65, 68, 73, 76, 81, 85, 89, 94, 96],
+            [70, 75, 78, 81, 85, 90, 93, 98, 100],
+            [75, 79, 82, 87, 90, 95, 98, 100, 100],
+            [81, 84, 87, 92, 95, 100, 100, 100, 100],
+            [85, 89, 93, 96, 100, 100, 100, 100, 100],
+            [90, 93, 98, 100, 100, 100, 100, 100, 100],
+            [95, 100, 100, 100, 100, 100, 100, 100, 100],
+            [100, 100, 100, 100, 100, 100, 100, 100, 100]
+        ]
+    },
+    "levels_4_6": {
+        "title": "Spending Chart - Zanmato Levels 4-6",
+        "subtitle": "Percentages for Option 3 (Defeat strongest enemies) with Full Overdrive",
+        "payment_ranges": ["1", "4", "8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", 
+                          "8192", "16384", "32768", "65536", "131072", "262144", "524288", "1048576"],
+        "compatibility_values": [0, 32, 64, 96, 128, 160, 192, 224, 255],
+        "data": [
+            [6, 8, 9, 10, 12, 15, 17, 18, 21],
+            [8, 9, 12, 14, 15, 18, 20, 21, 23],
+            [11, 12, 14, 15, 18, 20, 21, 25, 26],
+            [13, 15, 17, 18, 20, 23, 25, 26, 28],
+            [16, 17, 18, 21, 23, 25, 28, 29, 31],
+            [19, 20, 21, 23, 25, 28, 29, 31, 34],
+            [20, 21, 25, 26, 28, 31, 32, 34, 36],
+            [23, 25, 26, 28, 31, 32, 34, 37, 39],
+            [25, 28, 29, 31, 32, 35, 37, 39, 40],
+            [28, 29, 31, 34, 35, 37, 40, 42, 43],
+            [31, 32, 34, 35, 37, 40, 42, 43, 46],
+            [33, 34, 37, 39, 40, 43, 45, 46, 48],
+            [36, 37, 39, 40, 43, 45, 46, 50, 51],
+            [38, 40, 42, 43, 45, 48, 50, 51, 53],
+            [41, 42, 44, 46, 48, 50, 53, 54, 56],
+            [44, 45, 46, 48, 50, 53, 54, 56, 59],
+            [45, 46, 50, 51, 53, 56, 57, 59, 60],
+            [48, 50, 51, 53, 56, 57, 59, 62, 64],
+            [50, 53, 54, 56, 57, 60, 62, 64, 65],
+            [53, 54, 56, 59, 60, 62, 65, 67, 68]
+        ]
+    }
+}
+
 # Version-specific settings
 VERSION_SETTINGS = {
     VERSION_ORIGINAL: {
@@ -73,51 +135,41 @@ def get_level_multiplier(zanmato_level, hiring_goal):
 def calculate_paid_zanmato_value(compatibility, total_gil, payment, zanmato_level, hiring_goal, overdrive, version):
     """
     Calculate the Zanmato value for a paid Zanmato attempt.
-    Uses correct GameFAQs formulas for both game versions.
+    Uses correct formulas based on game code analysis.
     """
     settings = VERSION_SETTINGS[version]
     
-    # Step 1: Gil motivation from GameFAQs logarithmic formula
-    motivation1 = get_gil_motivation(payment, version)
+    # Step 1: Gil motivation from logarithmic formula
+    gil_motivation = get_gil_motivation(payment, version)
     
-    # Step 2: Compatibility contribution
-    compat_contribution = math.floor(compatibility / settings["compatibility_divisor"])
-    motivation2 = motivation1 + compat_contribution
+    # Step 2: Compatibility motivation = Gil motivation + (compatibility/10)
+    compatibility_motivation = gil_motivation + math.floor(compatibility / settings["compatibility_divisor"])
     
-    # Step 3: Payment ratio (only applies if training goal chosen)
-    if hiring_goal == GOAL_TRAINING and total_gil > 0:
-        payment_ratio = payment / total_gil
-        ratio_factor = 0.75 + (payment_ratio * 0.5)
-        motivation3 = math.floor(motivation2 * ratio_factor)
-    else:
-        motivation3 = motivation2
-    
-    # Step 4: Zanmato level multiplier
+    # Step 3: Zanmato level motivation = Compatibility motivation × choice multiplier
     level_mult = get_level_multiplier(zanmato_level, hiring_goal)
-    motivation4 = math.floor(motivation3 * level_mult)
+    zanmato_level_motivation = math.floor(compatibility_motivation * level_mult)
     
-    # Step 5: Overdrive bonus
+    # Step 4: Overdrive motivation = Zanmato level motivation + overdrive bonus
     overdrive_bonus = settings["overdrive_bonus"] if overdrive else 0
-    motivation5 = motivation4 + overdrive_bonus
+    overdrive_motivation = zanmato_level_motivation + overdrive_bonus
     
     
-    # Step 6: Random factor (0-63 will be added)
+    # Step 5: Random factor (0-63 will be added)
     # We return the base value before random is applied
     
     return {
-        "min_value": motivation5,  # random = 0
-        "max_value": motivation5 + 63,  # random = 63
-        "gil_motivation": motivation1,
-        "compatibility_contribution": compat_contribution,
-        "ratio_applied": hiring_goal == GOAL_TRAINING,
+        "min_value": overdrive_motivation,  # random = 0
+        "max_value": overdrive_motivation + 63,  # random = 63
+        "gil_motivation": gil_motivation,
+        "compatibility_contribution": math.floor(compatibility / settings["compatibility_divisor"]),
+        "ratio_applied": False,  # No longer used
         "level_multiplier": level_mult,
         "overdrive_bonus": overdrive_bonus,
         "motivation_steps": {
-            "step1_gil": motivation1,
-            "step2_compat": motivation2,
-            "step3_ratio": motivation3,
-            "step4_level": motivation4,
-            "step5_overdrive": motivation5
+            "step1_gil": gil_motivation,
+            "step2_compatibility": compatibility_motivation,
+            "step3_zanmato_level": zanmato_level_motivation,
+            "step4_overdrive": overdrive_motivation
         }
     }
 
@@ -147,7 +199,7 @@ def calculate_zanmato_probability(compatibility, total_gil, payment, zanmato_lev
         guaranteed = False
     
     return {
-        "probability": round(probability, 2),
+        "probability": math.floor(probability),  # Game truncates down to integer
         "guaranteed": guaranteed,
         "min_value": min_val,
         "max_value": max_val,
@@ -156,59 +208,46 @@ def calculate_zanmato_probability(compatibility, total_gil, payment, zanmato_lev
 
 
 def find_minimum_gil(compatibility, total_gil, zanmato_level, hiring_goal, overdrive, version):
-    """Binary search to find minimum gil for guaranteed Zanmato, or best achievable."""
-    left, right = 0, MAX_GIL
-    guaranteed_result = None
-    best_result = None
-    best_probability = 0
+    """Find the most efficient gil bracket for the highest achievable percentage."""
     
-    # First, try to find guaranteed Zanmato
-    while left <= right:
-        mid = (left + right) // 2
-        calc = calculate_zanmato_probability(compatibility, total_gil, mid, zanmato_level, hiring_goal, overdrive, version)
+    # Define gil brackets based on the reference tables (powers of 2 pattern)
+    gil_brackets = [1, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 
+                   16384, 32768, 65536, 131072, 262144, 524288, 1048576]
+    
+    # Test each bracket (using minimum amount in bracket for efficiency)
+    best_gil = 1
+    best_percentage = 0
+    guaranteed_gil = None
+    
+    for gil_amount in gil_brackets:
+        if gil_amount > MAX_GIL:
+            break
+            
+        calc = calculate_zanmato_probability(compatibility, total_gil, gil_amount, zanmato_level, hiring_goal, overdrive, version)
         
+        # Check for guaranteed first
         if calc["guaranteed"]:
-            guaranteed_result = mid
-            right = mid - 1  # Try to find lower amount
-        else:
-            left = mid + 1
+            guaranteed_gil = gil_amount
+            break
+            
+        # Track the best non-guaranteed option
+        if calc["probability"] > best_percentage:
+            best_percentage = calc["probability"]
+            best_gil = gil_amount
     
-    # If guaranteed was found, return it
-    if guaranteed_result is not None:
+    # Return guaranteed if found
+    if guaranteed_gil is not None:
         return {
             "type": "guaranteed",
-            "minimum_gil": guaranteed_result,
-            "probability": 100.0
+            "minimum_gil": guaranteed_gil,
+            "probability": 100
         }
     
-    # No guaranteed found, find the best achievable percentage
-    # Test key payment amounts to find the maximum probability
-    test_amounts = []
-    
-    # Add powers of 2 up to MAX_GIL (this covers the logarithmic nature of gil motivation)
-    power = 1
-    while power <= MAX_GIL:
-        test_amounts.append(power)
-        power *= 2
-    
-    # Add some intermediate values for better coverage
-    for base in [100, 1000, 10000, 100000, 1000000]:
-        for mult in [1, 2, 3, 4, 5, 6, 7, 8, 9]:
-            amount = base * mult
-            if amount <= MAX_GIL:
-                test_amounts.append(amount)
-    
-    # Test all amounts and find the best
-    for amount in sorted(set(test_amounts)):
-        calc = calculate_zanmato_probability(compatibility, total_gil, amount, zanmato_level, hiring_goal, overdrive, version)
-        if calc["probability"] > best_probability:
-            best_probability = calc["probability"]
-            best_result = amount
-    
+    # Return best achievable bracket
     return {
-        "type": "best_effort",
-        "minimum_gil": best_result,
-        "probability": best_probability
+        "type": "best_bracket",
+        "minimum_gil": best_gil,
+        "probability": best_percentage
     }
 
 
@@ -276,6 +315,7 @@ def calculate():
                 "enemy": enemy_name,
                 "enemy_info": enemy_info,
                 "zanmato_level": zanmato_level,
+                "compatibility": compatibility,
                 "version": version,
                 "version_name": VERSION_SETTINGS[version]["name"]
             })
@@ -299,6 +339,7 @@ def calculate():
                 "enemy": enemy_name,
                 "enemy_info": enemy_info,
                 "zanmato_level": zanmato_level,
+                "compatibility": compatibility,
                 "version": version,
                 "version_name": VERSION_SETTINGS[version]["name"]
             })
@@ -321,6 +362,27 @@ def enemy_details(enemy_name):
         "name": enemy_name,
         "info": info
     })
+
+
+@app.route('/spending-chart/<int:zanmato_level>')
+def get_spending_chart(zanmato_level):
+    """Get the appropriate spending chart for the given zanmato level."""
+    try:
+        if zanmato_level <= 3:
+            chart_key = "levels_1_3"
+        elif zanmato_level <= 6:
+            chart_key = "levels_4_6"
+        else:
+            return jsonify({"error": "Invalid zanmato level"}), 400
+        
+        chart_data = SPENDING_CHARTS[chart_key]
+        return jsonify({
+            "success": True,
+            "chart": chart_data
+        })
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route('/images/<filename>')
