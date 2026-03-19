@@ -327,11 +327,20 @@ def calculate():
                 "compatibility": compatibility
             })
         else:  # probability calculation
-            payment = int(data.get('payment', 0))
+            # Get and clean payment input - strip whitespace, commas, and periods (use regex for all)
+            import re
+            payment_raw = str(data.get('payment', '')).strip()
+            payment_str = re.sub(r'[,.]', '', payment_raw)
             
-            # Validate payment amount - Yojimbo dismisses if offered 0 gil
-            if payment <= 0:
-                return jsonify({"error": "Gil payment must be greater than 0. Yojimbo dismisses if offered 0 gil."}), 400
+            # Validate payment input
+            try:
+                payment = int(payment_str)
+            except ValueError:
+                return jsonify({"error": "Gil payment must be a positive number (1-999999999)."}), 400
+            
+            # Validate payment amount is in valid range
+            if payment <= 0 or payment > MAX_GIL:
+                return jsonify({"error": f"Gil payment must be between 1 and {MAX_GIL:,}."}), 400
             
             result = calculate_zanmato_probability(compatibility, payment, zanmato_level, hiring_goal, overdrive)
             
