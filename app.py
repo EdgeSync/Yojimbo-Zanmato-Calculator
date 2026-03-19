@@ -32,7 +32,7 @@ SPENDING_CHARTS = {
         "title": "Spending Chart - Zanmato Levels 1-3",
         "subtitle": "Percentages for Option 3 (Defeat strongest enemies) with Full Overdrive",
         "payment_ranges": ["1", "4", "8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", 
-                          "8192", "16384", "32768", "65536", "131072", "262144", "524288", "1048576"],
+                          "8192", "16384", "32768", "65536", "131072", "262144", "524288", "1048576", "2097152", "4194304", "8388608", "16777216", "33554432", "67108864", "134217728", "268435456", "536870912"],
         "compatibility_values": [0, 32, 64, 96, 128, 160, 192, 224, 255],
         "data": [
             [6, 9, 12, 17, 20, 25, 29, 32, 37],
@@ -54,6 +54,15 @@ SPENDING_CHARTS = {
             [85, 89, 93, 96, 100, 100, 100, 100, 100],
             [90, 93, 98, 100, 100, 100, 100, 100, 100],
             [95, 100, 100, 100, 100, 100, 100, 100, 100],
+            [100, 100, 100, 100, 100, 100, 100, 100, 100],
+            [100, 100, 100, 100, 100, 100, 100, 100, 100],
+            [100, 100, 100, 100, 100, 100, 100, 100, 100],
+            [100, 100, 100, 100, 100, 100, 100, 100, 100],
+            [100, 100, 100, 100, 100, 100, 100, 100, 100],
+            [100, 100, 100, 100, 100, 100, 100, 100, 100],
+            [100, 100, 100, 100, 100, 100, 100, 100, 100],
+            [100, 100, 100, 100, 100, 100, 100, 100, 100],
+            [100, 100, 100, 100, 100, 100, 100, 100, 100],
             [100, 100, 100, 100, 100, 100, 100, 100, 100]
         ]
     },
@@ -61,7 +70,7 @@ SPENDING_CHARTS = {
         "title": "Spending Chart - Zanmato Levels 4-6",
         "subtitle": "Percentages for Option 3 (Defeat strongest enemies) with Full Overdrive",
         "payment_ranges": ["1", "4", "8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", 
-                          "8192", "16384", "32768", "65536", "131072", "262144", "524288", "1048576"],
+                          "8192", "16384", "32768", "65536", "131072", "262144", "524288", "1048576", "2097152", "4194304", "8388608", "16777216", "33554432", "67108864", "134217728", "268435456", "536870912"],
         "compatibility_values": [0, 32, 64, 96, 128, 160, 192, 224, 255],
         "data": [
             [6, 8, 9, 10, 12, 15, 17, 18, 21],
@@ -83,7 +92,16 @@ SPENDING_CHARTS = {
             [45, 46, 50, 51, 53, 56, 57, 59, 60],
             [48, 50, 51, 53, 56, 57, 59, 62, 64],
             [50, 53, 54, 56, 57, 60, 62, 64, 65],
-            [53, 54, 56, 59, 60, 62, 65, 67, 68]
+            [53, 54, 56, 59, 60, 62, 65, 67, 68],
+            [56, 57, 59, 60, 62, 65, 67, 68, 71],
+            [57, 59, 62, 64, 65, 68, 70, 71, 73],
+            [60, 62, 64, 65, 68, 70, 71, 75, 76],
+            [62, 65, 67, 68, 70, 73, 75, 76, 78],
+            [65, 67, 68, 71, 73, 75, 78, 79, 81],
+            [68, 70, 71, 73, 75, 78, 79, 81, 84],
+            [70, 71, 75, 76, 78, 81, 82, 84, 85],
+            [73, 75, 76, 78, 81, 82, 84, 87, 89],
+            [75, 78, 79, 81, 82, 85, 87, 89, 90]
         ]
     }
 }
@@ -127,8 +145,12 @@ def calculate_paid_zanmato_value(compatibility, payment, zanmato_level, hiring_g
     Uses correct formulas based on game code analysis.
     """
     
+    # Cap payment at maximum bracket (536,870,912) - anything above uses same calculation
+    MAX_GIL_BRACKET = 536870912
+    capped_payment = min(payment, MAX_GIL_BRACKET)
+    
     # Step 1: Gil motivation from logarithmic formula
-    gil_motivation = get_gil_motivation(payment)
+    gil_motivation = get_gil_motivation(capped_payment)
     
     # Step 2: Compatibility motivation = Gil motivation + (compatibility/10)
     compatibility_motivation = gil_motivation + math.floor(compatibility / VERSION_SETTINGS["compatibility_divisor"])
@@ -200,7 +222,8 @@ def find_minimum_gil(compatibility, zanmato_level, hiring_goal, overdrive):
     
     # Define gil brackets based on the reference tables (powers of 2 pattern)
     gil_brackets = [1, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 
-                   16384, 32768, 65536, 131072, 262144, 524288, 1048576]
+                   16384, 32768, 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304,
+                   8388608, 16777216, 33554432, 67108864, 134217728, 268435456, 536870912]
     
     # Test each bracket (using minimum amount in bracket for efficiency)
     best_gil = 1
