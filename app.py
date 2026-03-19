@@ -8,8 +8,14 @@ from flask import Flask, render_template, request, jsonify, send_from_directory
 from enemies import ENEMIES, get_enemy_names, get_enemy_zanmato_level, get_enemy_info
 import math
 import os
+import logging
+from logging.handlers import TimedRotatingFileHandler
+from datetime import datetime
 
 app = Flask(__name__)
+
+# Logging configuration
+ENABLE_LOGGING = False  # Set to True to enable file logging
 
 # Constants from the GameFAQs guide
 MAX_GIL = 999999999
@@ -327,20 +333,11 @@ def calculate():
                 "compatibility": compatibility
             })
         else:  # probability calculation
-            # Get and clean payment input - strip whitespace, commas, and periods (use regex for all)
-            import re
-            payment_raw = str(data.get('payment', '')).strip()
-            payment_str = re.sub(r'[,.]', '', payment_raw)
+            payment = int(data.get('payment', 0))
             
-            # Validate payment input
-            try:
-                payment = int(payment_str)
-            except ValueError:
-                return jsonify({"error": "Gil payment must be a positive number (1-999999999)."}), 400
-            
-            # Validate payment amount is in valid range
-            if payment <= 0 or payment > MAX_GIL:
-                return jsonify({"error": f"Gil payment must be between 1 and {MAX_GIL:,}."}), 400
+            # Validate payment amount - Yojimbo dismisses if offered 0 gil
+            if payment <= 0:
+                return jsonify({"error": "Gil payment must be greater than 0. Yojimbo dismisses if offered 0 gil."}), 400
             
             result = calculate_zanmato_probability(compatibility, payment, zanmato_level, hiring_goal, overdrive)
             
@@ -405,5 +402,51 @@ def serve_image(filename):
     return send_from_directory('images', filename)
 
 
+# Request logging hook (if logging is enabled)
+@app.after_request
+def log_request(response):
+    """Log all requests to file if logging is enabled."""
+    if ENABLE_LOGGING:
+        werkzeug_logger = logging.getLogger('werkzeug')
+        if werkzeug_logger.handlers:
+            # Format: 127.0.0.1 - - [date time] "METHOD /path HTTP/1.1" status_code content_length
+            request_log = f'{request.remote_addr} - - [{datetime.now().strftime("%d/%b/%Y %H:%M:%S")}] "{request.method} {request.path} HTTP/1.1" {response.status_code} -'
+            werkzeug_logger.info(request_log)
+    return response
+
+
 if __name__ == '__main__':
+    # Set up logging if enabled
+    if ENABLE_LOGGING:
+        try:
+            os.makedirs('logs', exist_ok=True)
+            
+            # Create daily rotating file handler
+            log_filename = f"logs/{datetime.now().strftime('%Y_%m_%d')}_Yojimbo_Log.txt"
+            handler = TimedRotatingFileHandler(
+                filename=log_filename,
+                when='midnight',
+                interval=1,
+                backupCount=30
+            )
+            
+            # Set formatter to match Flask's default format
+            formatter = logging.Formatter('%(asctime)s - - %(message)s', datefmt='%d/%b/%Y %H:%M:%S')
+            handler.setFormatter(formatter)
+            
+            # Configure werkzeug logger (handles Flask request logging)
+            log = logging.getLogger('werkzeug')
+            log.setLevel(logging.INFO)
+            log.addHandler(handler)
+            log.propagate = False  # Prevent double logging
+            
+            # Also add to Flask app logger
+            app.logger.addHandler(handler)
+            app.logger.setLevel(logging.INFO)
+            
+            print(f"✓ Logging enabled: {log_filename}")
+            
+        except Exception as e:
+            print(f"✗ Failed to set up logging: {e}")
+    
     app.run(debug=False, port=5000)
