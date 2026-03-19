@@ -145,12 +145,20 @@ def calculate_paid_zanmato_value(compatibility, payment, zanmato_level, hiring_g
     Uses correct formulas based on game code analysis.
     """
     
-    # Cap payment at maximum bracket (536,870,912) - anything above uses same calculation
-    MAX_GIL_BRACKET = 536870912
-    capped_payment = min(payment, MAX_GIL_BRACKET)
+    # Round payment to nearest bracket minimum
+    gil_brackets = [1, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 
+                   16384, 32768, 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304,
+                   8388608, 16777216, 33554432, 67108864, 134217728, 268435456, 536870912]
+    
+    bracketed_payment = payment
+    for bracket in gil_brackets:
+        if payment < bracket:
+            # Payment is below this bracket, use previous bracket
+            break
+        bracketed_payment = bracket
     
     # Step 1: Gil motivation from logarithmic formula
-    gil_motivation = get_gil_motivation(capped_payment)
+    gil_motivation = get_gil_motivation(bracketed_payment)
     
     # Step 2: Compatibility motivation = Gil motivation + (compatibility/10)
     compatibility_motivation = gil_motivation + math.floor(compatibility / VERSION_SETTINGS["compatibility_divisor"])
