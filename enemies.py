@@ -6949,7 +6949,7 @@ ENEMIES = {
     },
 
     "Shinryu": {
-        "zanmato_lv": 4,
+        "zanmato_lv": 5,
         "hp": 2000000,
         "hp_overkill": 99999,
         "mp": 72,
@@ -7238,7 +7238,7 @@ ENEMIES = {
     },
 
     "Biran Ronso": {
-        "zanmato_lv": 1,
+        "zanmato_lv": 4,
         "hp": "Varies",
         "hp_overkill": 2500,
         "mp": 200,
@@ -7597,7 +7597,7 @@ ENEMIES = {
     },
 
     "Dark Ixion (First encounter)": {
-        "zanmato_lv": 6,
+        "zanmato_lv": 5,
         "hp": 1200000,
         "hp_overkill": 99999,
         "mp": 999,
@@ -7628,7 +7628,7 @@ ENEMIES = {
     },
 
     "Dark Ixion (Second encounter)": {
-        "zanmato_lv": 6,
+        "zanmato_lv": 5,
         "hp": 1200000,
         "hp_overkill": 99999,
         "mp": 999,
@@ -8886,7 +8886,7 @@ ENEMIES = {
     },
 
     "Seymour Flux": {
-        "zanmato_lv": 1,
+        "zanmato_lv": 4,
         "hp": 70000,
         "hp_overkill": 3500,
         "mp": 512,
@@ -9887,7 +9887,7 @@ ENEMIES = {
     },
 
     "Yu Yevon": {
-        "zanmato_lv": 1,
+        "zanmato_lv": 5,
         "hp": 99999,
         "hp_overkill": 99999,
         "mp": 1,
