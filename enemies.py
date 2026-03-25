@@ -2340,7 +2340,7 @@ ENEMIES = {
             "acc": 100, "agl": 12, "eva": 0, "luck": 15
         },
         "gil": 300,
-        "steal": {"common": "Hi-Potion", "rare": "Hi-Potion"},
+        "steal": {"common": "Hi-Potion", "rare": "Ether"},
         "bribe": ["Ether x10 (50,000 gil)"],
         "drop": {"common": "Ability Sphere x1", "rare": "Ability Sphere x1"},
         "equipment_drop": "1-3 slots, 1-3 abilities, 100% chance",
