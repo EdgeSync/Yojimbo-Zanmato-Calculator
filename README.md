@@ -1,8 +1,8 @@
 # Yojimbo Zanmato Calculator
 
-A web-based calculator for Final Fantasy X that estimates the probability of Yojimbo performing his **Zanmato** one-hit-kill attack, based on the formulas documented in the GameFAQs guide.
+A web-based calculator for Final Fantasy X that estimates the probability of Yojimbo performing his **Zanmato** one-hit-kill attack, based on the formulas documented in the Dansg08 YouTube Video.
 
-Supports both **NTSC/Japanese** and **PAL/International/HD Remaster** versions of the game.
+Supports **PAL/International/HD Remaster** versions of the game.
 
 ## Features
 
