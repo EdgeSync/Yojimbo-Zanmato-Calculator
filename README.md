@@ -6,7 +6,7 @@ Supports **PAL/International/HD Remaster** versions of the game.
 
 ## Try it Out
 
-There is a version hosted here: https://yojimbocalc.pythonanywhere.com/
+There is a version hosted here: https://yojimbocalc.pythonanywhere.com/    
 Hop on over and try it out. 
 
 ## Features
