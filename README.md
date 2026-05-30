@@ -4,6 +4,11 @@ A web-based calculator for Final Fantasy X that estimates the probability of Yoj
 
 Supports **PAL/International/HD Remaster** versions of the game.
 
+## Try it Out
+
+There is a version hosted here: https://yojimbocalc.pythonanywhere.com/
+Hop on over and try it out. 
+
 ## Features
 
 - Calculate Zanmato probability for a given gil payment
