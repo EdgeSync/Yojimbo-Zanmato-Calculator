@@ -2340,7 +2340,7 @@ ENEMIES = {
             "acc": 100, "agl": 12, "eva": 0, "luck": 15
         },
         "gil": 300,
-        "steal": {"common": "Hi-Potion", "rare": "Hi-Potion"},
+        "steal": {"common": "Hi-Potion", "rare": "Ether"},
         "bribe": ["Ether x10 (50,000 gil)"],
         "drop": {"common": "Ability Sphere x1", "rare": "Ability Sphere x1"},
         "equipment_drop": "1-3 slots, 1-3 abilities, 100% chance",
@@ -6949,7 +6949,7 @@ ENEMIES = {
     },
 
     "Shinryu": {
-        "zanmato_lv": 4,
+        "zanmato_lv": 5,
         "hp": 2000000,
         "hp_overkill": 99999,
         "mp": 72,
@@ -7238,7 +7238,7 @@ ENEMIES = {
     },
 
     "Biran Ronso": {
-        "zanmato_lv": 1,
+        "zanmato_lv": 4,
         "hp": "Varies",
         "hp_overkill": 2500,
         "mp": 200,
@@ -7597,7 +7597,7 @@ ENEMIES = {
     },
 
     "Dark Ixion (First encounter)": {
-        "zanmato_lv": 6,
+        "zanmato_lv": 5,
         "hp": 1200000,
         "hp_overkill": 99999,
         "mp": 999,
@@ -7628,7 +7628,7 @@ ENEMIES = {
     },
 
     "Dark Ixion (Second encounter)": {
-        "zanmato_lv": 6,
+        "zanmato_lv": 5,
         "hp": 1200000,
         "hp_overkill": 99999,
         "mp": 999,
@@ -8886,7 +8886,7 @@ ENEMIES = {
     },
 
     "Seymour Flux": {
-        "zanmato_lv": 1,
+        "zanmato_lv": 4,
         "hp": 70000,
         "hp_overkill": 3500,
         "mp": 512,
@@ -9887,7 +9887,7 @@ ENEMIES = {
     },
 
     "Yu Yevon": {
-        "zanmato_lv": 1,
+        "zanmato_lv": 5,
         "hp": 99999,
         "hp_overkill": 99999,
         "mp": 1,
